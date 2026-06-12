@@ -2,7 +2,7 @@
 title: Ways to Contribute
 ---
 
-Welcome, and thank you for your interest in contributing to Monty!
+Welcome, and thank you for your interest in contributing to Monty! (If you need more reasons for why getting involved in this project might be a great way to dedicate your time, see our [why contribute?](./why-contribute.md) page)
 
 We appreciate all of your contributions. Below, you will find a list of ways to get involved and help create AI based on principles of the neocortex.
 
@@ -15,6 +15,12 @@ There are many ways in which you can contribute to the code. For some suggestion
 
 Monty integrates code changes using GitHub Pull Requests. For details on how Monty uses Pull Requests, please consult the [Contributing Pull Requests](ways-to-contribute-to-code.md) guide.
 
+# Test Our Approach/Build a Demo
+
+The vision of this project is to implement a generally intelligent system that can solve a wide variety of sensorimotor tasks (at a minimum, any task the neocortex can solve that humans can perform with ease). To evaluate this, we are continually seeking ways to assess the system's capabilities. If you have an idea for how to test an important capability or an existing benchmark to compare our algorithm against, please consider contributing these. You can have a look at our [Project Showcase](../community/project-showcase.md) page for some inspiration from previous Monty demos.
+
+We also have a tutorial on [using Monty in a custom application](../how-to-use-monty/tutorials/using-monty-in-a-custom-application.md) to help you get started.
+
 # Document
 
 This project has many aspects and we try to document them all here in sufficient detail. However, you are the ultimate judge of whether this documentation is sufficient and what kind of information is missing. We try to update the documentation based on questions asked on our communication channels but we are always happy to get more help with this. 
@@ -23,17 +29,13 @@ Also, if you are contributing to our code, it helps everyone else to include a c
 
 Please see our [guide on contributing documentation](documentation.md).
 
-# Tutor
-
-As a Monty user or contributor, you can help others become familiar with different aspects of Monty. We are always looking for new approaches to ease the introduction to Monty and its concepts. See the [Contributing Tutorials](contributing-tutorials.md) guide on how you could add easy-to-follow tutorials for other users. You can also become active on our forum and help answer questions from others.
-
 # Discuss
 
 You can find the researchers, developers, and users of Monty on the [Thousand Brains Forum](https://forum.thousandbrains.org/). Please join us there for active discussion on all things Monty and Thousand Brains.
 
-# Test Our Approach
+# Tutor
 
-The vision of this project is to implement a generally intelligent system that can solve a wide variety of sensorimotor tasks (at a minimum, any task the neocortex can solve/humans can perform with ease). To evaluate this, we are continually looking for test beds in which we can assess the system's capabilities. If you have an idea of how to test an important capability or you have an existing benchmark on which you want to compare our algorithm, please consider contributing these. 
+As a Monty user or contributor, you can help others become familiar with different aspects of Monty. We are always looking for new approaches to ease the introduction to Monty and its concepts. See the [Contributing Tutorials](contributing-tutorials.md) guide on how you could add easy-to-follow tutorials for other users. You can also become active on our [forum](https://forum.thousandbrains.org/) and help answer questions from others.
 
 # Report an Issue
 

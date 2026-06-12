@@ -11,7 +11,7 @@ This documentation outlines the current features, and future vision, of our plat
 The Monty project incorporates a lot of new concepts and ideas and will require considerable learning on the part of contributors who want to make significant code contributions or to use the code to solve real-world problems.  With that in mind, we've tried to make the project easy to comprehend and get started with.  To understand the fundamental principles of the project, these are some resources that we recommend:
 
 1. 🧠 [Vision of the Thousand Brains Project](./vision-of-the-thousand-brains-project.md) which describes the **guiding principles** of the project.
-2. 🎥 [YouTube Videos](https://www.youtube.com/@thousandbrainsproject) that contain in depth descriptions of the project and the principles that guide it.  The **Quick Start playlist** is the fastest way to learn the basics.
+2. 🎥 [YouTube Videos](https://www.youtube.com/@thousandbrainsproject) that contain in depth descriptions of the project and the principles that guide it.  The **[Meet Monty 2026 playlist](https://youtube.com/playlist?list=PLXpTU6oIscrkM2ZYSohq04cudo1cGGKTb&si=0ZJquQ8VzZZNupg1)** is the fastest way to get an overview of the project and our approach.
 3. 📚 [Tutorials](../how-to-use-monty/tutorials.md) which are **step-by-step guides** for using Monty.
 4. 💬 [Discourse Forum](https://forum.thousandbrains.org/) which is a community forum for discussing the project and a great place for beginners to **get answers to questions**.
 5. ❓ You can also check out our FAQs for the [Thousand Brains Project](./faq-thousand-brains-project.md), and the underlying [Monty algorithms](../how-monty-works/faq-monty.md).
@@ -27,7 +27,7 @@ The documentation is broken into six main sections:
 | ⚙️&nbsp;[How&nbsp;Monty&nbsp;Works](../how-monty-works/implementation-overview.md) | Dive deep into the concrete algorithms that make Monty work and understand how the different components function together. |
 | 🤝&nbsp;[Contributing](../contributing/why-contribute.md) | Discover the many ways you can contribute to the project - from code and documentation to testing and ideas. |
 | 👥&nbsp;[Community](../community/code-of-conduct.md) | Join our welcoming community! Learn about our guidelines, code of conduct, and how to participate effectively. |
-| 🧠&nbsp;[Theory](../theory/theory-overview.md) | The neuroscience theory behind the project and our recent conceptual progress. |
+| 🧠&nbsp;[Neuroscience Theory](../theory/theory-overview.md) | The neuroscience theory behind the project and our recent conceptual progress. |
 | 🔮&nbsp;[Future&nbsp;Work](../future-work/project-roadmap.md) | Explore exciting opportunities to help shape Monty's future by contributing to planned features and improvements. |
 
 
