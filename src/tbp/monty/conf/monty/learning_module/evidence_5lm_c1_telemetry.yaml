@@ -1,0 +1,32 @@
+# @package experiment.config.monty_config.learning_modules
+#
+# C1 TELEMETRY ARM, 5 VOTING LMs -- the null gate at the multi-module scale.
+#
+# Inherits every parameter from the shipped `evidence_5lm_nn10_dod003` and
+# replaces one key on each of the five modules: the feature evidence calculator.
+# Since `TelemetryGaussianCalculator` returns the shipped calculator's output
+# verbatim, a run using this file must reproduce the stock 5-LM row exactly. Any
+# deviation means the wiring is broken, not that the experiment found something.
+#
+# Set MONTY_C1_TELEMETRY_DIR before running or the recorded log-likelihoods are
+# discarded: `run_parallel.py` spawns a fresh process per episode with
+# maxtasksperchild=1, so anything held on the class dies with the worker.
+
+defaults:
+  - evidence_5lm_nn10_dod003
+
+learning_module_0:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.TelemetryGaussianCalculator}
+learning_module_1:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.TelemetryGaussianCalculator}
+learning_module_2:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.TelemetryGaussianCalculator}
+learning_module_3:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.TelemetryGaussianCalculator}
+learning_module_4:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.TelemetryGaussianCalculator}

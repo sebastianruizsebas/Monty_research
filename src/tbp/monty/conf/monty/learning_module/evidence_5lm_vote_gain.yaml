@@ -1,0 +1,124 @@
+# @package experiment.config.monty_config.learning_modules
+#
+# E4 — VOTE-GAIN SWEEP. Tests an over-counting analogue with ZERO new code.
+#
+# ============================================================================
+# WHAT THIS IS, IN PLAIN LANGUAGE
+# ============================================================================
+#
+# In the five-module setup, five copies of Monty look at different patches of
+# the same object at the same time and then tell each other what they think.
+# Each module folds its neighbours' opinions into its own running score.
+#
+# The catch is that it does this afresh on EVERY step, with no bookkeeping about
+# where an opinion came from. If a neighbour keeps saying "I think it's a mug,"
+# that gets counted as new supporting evidence over and over — even though it is
+# the same neighbour repeating itself, and even though part of what it believes
+# came from listening to you in the first place.
+#
+# In a network where messages travel in loops (and here all five modules are
+# connected to each other, so they do), correct reasoning requires subtracting
+# out your own contribution before folding in what comes back. That subtraction
+# has a name in the literature — the "cavity" correction — and Monty does not
+# do it. When brains fail to do it, the result is over-confidence and beliefs
+# that will not shift; that is the circular-inference account of psychosis.
+#
+# `vote_weight` is a dial on how loudly neighbours are heard. It is an existing
+# parameter that ships with a default of 1. Turning it up is NOT the missing
+# correction, and must never be described as implementing circular inference —
+# it is a blunt volume knob, and the honest claim is only that it tests how
+# robust the consensus is to inflated message strength.
+#
+# ============================================================================
+# WHY A NULL RESULT HERE IS A GOOD RESULT — read before predicting
+# ============================================================================
+#
+# It is tempting to write "Monty is already prone to over-counting." Two
+# published facts say otherwise, and naming them is what turns this from a
+# demonstration into an actual test:
+#
+#   1. Outgoing opinions are RESCALED to the range -1..1 before being sent
+#      (Leadholm et al., 2026, Sec. 3.5; `send_out_vote` in learning_module.py).
+#      That is already a volume control, and a partial answer to the problem.
+#   2. When the authors increased the NUMBER of modules — which raises total
+#      incoming message volume roughly in proportion — convergence got faster
+#      while "accuracy remain[s] approximately level" (p. 879).
+#
+# Neither settles it, because the paper varied how many senders there are, not
+# how loudly the receiver listens; those are different manipulations. But
+# together they are a genuine prior AGAINST an effect. So pre-register a flat
+# response as a plausible outcome, and report it as corroboration of the
+# architecture's gain control rather than as a failed experiment.
+#
+# ============================================================================
+# WHAT TO MEASURE
+# ============================================================================
+#
+# NULL: `vote_weight: 1.0` is the shipped default, so it must reproduce
+#   `benchmarks/ycb_10objs.csv`, row `randrot_noise_10distinctobj_5lms_dist_agent`
+#   — 100.00% correct, 39 matching steps, 53.20 deg rotation error, 0.00%
+#   used-MLH. This is a configuration check, not an experiment. If it fails,
+#   the wiring is wrong; stop.
+#
+# PRIMARY: terminal evidence of the winning hypothesis, predicted to rise
+#   roughly linearly with `vote_weight` — the fold-in is additive, so this is
+#   arithmetic and should hold or the votes are not arriving.
+#
+# SECONDARY: percent correct, matching steps, rotation error. The interesting
+#   shape would be confidence rising while accuracy does not: over-confidence
+#   without competence. A peak at some value other than 1 would say the shipped
+#   default is not the consensus optimum — small, real, and worth a sentence.
+#
+# FALSIFICATION: a flat or step-shaped response in terminal evidence means the
+#   votes are not reaching the accumulator — a wiring fault, not a finding.
+#   Confirm terminal evidence moves at all between 0 and 1 before interpreting
+#   anything else.
+#
+# ============================================================================
+# HOW TO SWEEP
+# ============================================================================
+#
+# Set the SAME value on all five modules; asymmetric gains are a different and
+# unmotivated experiment. This file sets 2.0; override for other points:
+#
+#   for W in 0 0.5 1 2 3 5; do
+#     python run.py experiment=randrot_noise_10distinctobj_5lms_dist_agent \
+#       monty/learning_module=evidence_5lm_vote_gain \
+#       logging=basic_info_evidence_eval_runs \
+#       ++experiment.config.logging.run_name=e4_vote_${W} \
+#       $(for i in 0 1 2 3 4; do \
+#         echo "++experiment.config.monty_config.learning_modules.learning_module_${i}.vote_weight=${W}"; \
+#       done)
+#   done
+#
+# Note this is a 5-module run; `run_parallel.py` is the faster launcher.
+#
+# ============================================================================
+# REFERENCES
+# ============================================================================
+# Jardri, R., & Denève, S. (2013). "Circular inferences in schizophrenia."
+#     Brain, 136(11), 3227-3241. — the over-counting framing this ADAPTS.
+#     No belief-propagation derivation is claimed here.
+# Jardri, R., Duverne, S., Litvinova, A. S., & Denève, S. (2017). "Experimental
+#     evidence for circular inference in schizophrenia." Nature Communications,
+#     8, 14218. — circular inference fit patient data better than plain Bayes.
+# Leadholm, N., Clay, V., Knudstrup, S., Lee, H., & Hawkins, J. (2026).
+#     "Thousand Brains systems." Neural Computation, 38(6), 845-896.
+#     — Sec. 3.5 vote normalisation; p. 879 accuracy level as modules scale.
+#
+# See monty_precision_formalization.tex Sec. E4 and Remark "rem:e4prior", and
+# e4_vote_gain_sweep.md.
+
+defaults:
+  - evidence_5lm_nn10_dod003
+
+learning_module_0:
+  vote_weight: 2.0
+learning_module_1:
+  vote_weight: 2.0
+learning_module_2:
+  vote_weight: 2.0
+learning_module_3:
+  vote_weight: 2.0
+learning_module_4:
+  vote_weight: 2.0

@@ -1,0 +1,151 @@
+# @package experiment.config.monty_config.learning_modules
+#
+# ORACLE-PRECISION ARM — tests the C2 claim without needing any C2 code.
+#
+# ============================================================================
+# WHAT THIS IS, IN PLAIN LANGUAGE
+# ============================================================================
+#
+# Monty stores, for each kind of measurement it takes, a "tolerance": how far
+# an observation may drift from what it remembered and still count as a match.
+# Those numbers are set by hand in the shipped configuration.
+#
+# Separately, and in a different file, the simulator deliberately corrupts every
+# observation with a known amount of random noise, to make the task realistic.
+#
+# Nobody has ever compared the two. The formalization document does, and finds
+# they disagree badly. Statistics says the right tolerance is the size of the
+# noise you are actually fighting. Lining the shipped numbers up against the
+# shipped noise (`camera_dist_noise_raw1_salience.yaml`, and Table 3 of the
+# reference publication, which agree exactly):
+#
+#   measurement          shipped tolerance   actual noise   how wrong
+#   -------------------  -----------------   ------------   ---------
+#   hue                  0.1                 0.1            correct
+#   saturation, value    0.2                 0.1            4x too loose
+#   log curvature        1.0                 0.1            100x too loose
+#
+# Curvature is being given a hundred times more slack than the noise warrants.
+# In practical terms Monty is saying "any curvature is close enough," which
+# means the curvature measurement is contributing almost nothing.
+#
+# This config simply sets every tolerance to the true noise level. That is the
+# destination the C2 estimator is supposed to LEARN its way to. Setting it by
+# hand tests whether arriving there matters, before a single line of estimator
+# code is written — and if the answer is "barely," that is worth knowing first.
+#
+# ============================================================================
+# THE PRE-REGISTERED PREDICTION — write this down BEFORE running
+# ============================================================================
+#
+# Recognition should change LITTLE. Predicting a big win here would be a
+# mistake, for a reason that is structural rather than empirical:
+#
+# Monty's architecture deliberately subordinates exactly these measurements.
+# Colour and curvature may SUPPORT a guess but may never RULE ONE OUT — only
+# shape and orientation can do that (Leadholm et al., 2026, p. 859). And the
+# orientation term has no tolerance at all, so this config cannot reach it.
+# The paper measures the ceiling directly: destroying all colour information
+# outright — far more violent than retuning it — costs about 15 percentage
+# points (88.1% -> 73.1%, p. 871), with shape carrying the rest.
+#
+# So: state an equivalence margin in advance (e.g. +/-2 points of accuracy,
+# +/-10% of median matching steps, >=10 seeds) and treat "no difference" as the
+# predicted result, not as a failed experiment. A large improvement would be a
+# surprise needing explanation, not a vindication.
+#
+# ============================================================================
+# THE CATCH NOBODY HAS WRITTEN DOWN YET — the most useful thing this run does
+# ============================================================================
+#
+# "Correct precision" is only correct for a bell curve. Monty does not use one.
+# It uses a triangular kernel that returns a hard ZERO the moment the difference
+# exceeds the tolerance — the observation is not merely downweighted, it is
+# thrown away entirely.
+#
+# The chance of that happening under noise of size sigma with tolerance tau is
+# 2*Phi(-tau/sigma). Setting tau = sigma means tau/sigma = 1, so:
+#
+#   arm            hue        sat/val    curvature
+#   -------------  ---------  ---------  -----------
+#   shipped        31.7%      4.6%       ~0%
+#   THIS CONFIG    31.7%      31.7%      31.7%
+#
+# Making the precision "statistically correct" therefore makes Monty discard a
+# third of its observations on every channel instead of one. It is entirely
+# possible this arm scores WORSE, and that would not refute the precision
+# reading — it would show that the tolerance is doing double duty as both a
+# noise scale and a censoring threshold, and that the two want different values.
+#
+# That is a real finding either way, and it is a confound C2 would otherwise
+# hit blind. The clean follow-up is to sweep the coverage multiplier z in
+# tau = z*sigma, which is exactly C2's `tolerance_z` parameter:
+#
+#   z = 1  -> tau = 0.1  (this file)     31.7% censored
+#   z = 2  -> tau = 0.2                   4.6% censored
+#   z = 3  -> tau = 0.3                   0.3% censored
+#
+#   python run.py experiment=randrot_noise_10distinctobj_dist_agent \
+#     monty/learning_module=evidence_1lm_oracle_precision \
+#     '++experiment.config.monty_config.learning_modules.learning_module_0.tolerances.patch.hsv=${np.array:[0.2,0.2,0.2]}' \
+#     '++experiment.config.monty_config.learning_modules.learning_module_0.tolerances.patch.principal_curvatures_log=${np.array:[0.2,0.2]}'
+#
+# To isolate the 100x channel on its own, leave `hsv` at its shipped value and
+# change only `principal_curvatures_log` — that is the single cleanest test of
+# whether the two-orders-of-magnitude gap was costing anything.
+#
+# ============================================================================
+# REFERENCES
+# ============================================================================
+# Feldman, H., & Friston, K. J. (2010). "Attention, uncertainty, and free-energy."
+#     Frontiers in Human Neuroscience, 4, 215. — precision as inverse variance,
+#     the identification that makes "tolerance = noise size" the right target.
+# Leadholm, N., Clay, V., Knudstrup, S., Lee, H., & Hawkins, J. (2026).
+#     "Thousand Brains systems." Neural Computation, 38(6), 845-896.
+#     — p. 859 the shape-over-colour commitment; p. 871 the 73.1% ablation;
+#     Table 3 the injected noise values this file is matched against.
+# Welford, B. P. (1962). "Note on a method for calculating corrected sums of
+#     squares and products." Technometrics, 4(3), 419-420. — the estimator C2
+#     will use to reach these numbers on its own instead of by hand.
+#
+# Baseline to beat (or match): `benchmarks/ycb_10objs.csv`, row
+# `randrot_noise_10distinctobj_dist_agent` — 99.00% correct, 39 matching steps,
+# 15.85 deg rotation error, 2.00% used-MLH.
+#
+# Run with:
+#   python run.py experiment=randrot_noise_10distinctobj_dist_agent \
+#     monty/learning_module=evidence_1lm_oracle_precision
+#
+# See Private_Monty_journal/v4/monty_precision_formalization.tex, Sec. C2, and
+# c2_channel_precision_estimator.md Sec. 1.5.
+
+defaults:
+  - hypotheses_updater/burst_sampling_10nn@learning_module_0
+
+learning_module_0:
+  _target_: tbp.monty.frameworks.models.evidence_matching.learning_module.EvidenceGraphLM
+  feature_weights:
+    patch:
+      hsv: ${np.array:[2, 0.5, 0.5]}
+      pose_vectors: ${np.ones:3}
+      principal_curvatures_log: ${np.ones:2}
+  # THE ONLY CHANGE FROM evidence_1lm_nn10_dod003. Shipped values were
+  # hsv [0.1, 0.2, 0.2] and principal_curvatures_log [1, 1]; both are set here
+  # to the standard deviation of the noise the simulator actually injects.
+  tolerances:
+    patch:
+      hsv: ${np.array:[0.1, 0.1, 0.1]}
+      principal_curvatures_log: ${np.array:[0.1, 0.1]}
+  max_match_distance: 0.01
+  x_percent_threshold: 20
+  evidence_threshold_config: all
+  max_graph_size: 0.3
+  num_model_voxels_per_dim: 100
+  gsg:
+    _target_: tbp.monty.frameworks.models.goal_generation.EvidenceGoalGenerator
+    goal_tolerances:
+      location: 0.015
+    elapsed_steps_factor: 10
+    min_post_goal_success_steps: 5
+    x_percent_scale_factor: 0.75
+    desired_object_distance: 0.03

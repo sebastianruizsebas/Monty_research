@@ -1,0 +1,120 @@
+# @package experiment.config.monty_config.learning_modules
+#
+# C1-EXACT ABLATION — the configuration in which the theorem is literally true
+# and Monty has stopped being Monty. Run it to exhibit the identity, NEVER to
+# argue for the method.
+#
+# ============================================================================
+# WHAT THIS IS, IN PLAIN LANGUAGE
+# ============================================================================
+#
+# When Monty compares what it just observed against a remembered point on an
+# object, it adds together two separate judgements:
+#
+#   1. ORIENTATION — "is this surface tilted the way I'd expect?"  This is the
+#      one that does the real work, and it is the only one allowed to rule a
+#      candidate object OUT.
+#   2. APPEARANCE — colour and curvature. Allowed to support a candidate, never
+#      to eliminate one.
+#
+# The C1 construct reinterprets the second judgement as a probability. It cannot
+# touch the first, because the orientation judgement has no tolerance parameter
+# anywhere in it — there is simply no width to read as a precision. So the total
+# score is a hybrid: half probability, half heuristic, and the clean statement
+# "this number is a real probability" is true only of the appearance half.
+#
+# This file makes the statement true of the whole thing, by the only means
+# available: setting the orientation weights to zero, which deletes the
+# orientation judgement entirely. What remains is pure appearance, and its
+# softmax is then literally the posterior probability over objects.
+#
+# It does this by deleting the single most important thing the architecture
+# does. That is the point of running it, and it must be described that way.
+#
+# ============================================================================
+# THE PRE-REGISTERED PREDICTION
+# ============================================================================
+#
+# SUBSTANTIALLY WORSE recognition. Not marginally — substantially.
+#
+# The reference publication supplies the yardstick: with colour information
+# destroyed but shape intact, Monty still scores 73.1% on 77 objects
+# (Leadholm et al., 2026, p. 871). This ablation is the mirror image — shape
+# destroyed, colour intact — and there is no published number for it because
+# nobody would build a system that way. The shape-bias literature that motivates
+# the architecture (Landau, Smith & Jones, 1988) predicts the mirror image is
+# far more damaging than the original.
+#
+# If this arm does NOT degrade sharply, something is wrong with the reasoning
+# about what the orientation term contributes, and that is worth chasing down
+# before anything else in the thesis is trusted.
+#
+# ============================================================================
+# ONE NON-OBVIOUS SAFETY FACT, ALREADY VERIFIED IN THE SOURCE
+# ============================================================================
+#
+# Zeroing these weights does NOT switch the sensor channel off. Monty decides
+# whether a channel is eligible for matching by looking at the NON-orientation
+# weights only (`features_for_matching/selector.py`), so colour and curvature
+# keep the channel alive. The zeros remove the orientation TERM while leaving
+# the channel in play — which is exactly the ablation wanted, and not something
+# to take on trust: it is why this file changes weights and not tolerances.
+#
+# Note also that these zeros remove BOTH parts of the orientation judgement at
+# once: `hypotheses_displacer.py` reads entry [0] as the surface-normal weight
+# and entry [1] as the curvature-direction weight, and the pose term is the
+# weighted sum of the two. Entry [2] is never read at all, so `[0, 0, 1]` would
+# behave identically to `[0, 0, 0]`. A PARTIAL ablation is available and may be
+# more informative than this total one — `[0, 1, 1]` keeps curvature direction
+# and drops surface normal, `[1, 0, 1]` does the reverse.
+#
+# ============================================================================
+# REFERENCES
+# ============================================================================
+# Landau, B., Smith, L. B., & Jones, S. S. (1988). "The importance of shape in
+#     early lexical learning." Cognitive Development, 3(3), 299-321. — the
+#     shape-bias result the architecture's priority is modelled on.
+# Leadholm, N., Clay, V., Knudstrup, S., Lee, H., & Hawkins, J. (2026).
+#     "Thousand Brains systems." Neural Computation, 38(6), 845-896.
+#     — p. 859 "the ID is causally defined by the shape, while color is merely
+#     correlated with it"; p. 871 the 73.1% colour-destroyed control.
+#
+# Baseline: `benchmarks/ycb_10objs.csv`, row
+# `randrot_noise_10distinctobj_dist_agent` — 99.00% correct, 39 matching steps.
+#
+# Run with:
+#   python run.py experiment=randrot_noise_10distinctobj_dist_agent \
+#     monty/learning_module=evidence_1lm_c1_exact
+#
+# See monty_precision_formalization.tex, Remark "rem:hybrid", and
+# c1_gaussian_likelihood_calculator.md Sec. 2.5.
+
+defaults:
+  - hypotheses_updater/burst_sampling_10nn_telemetry@learning_module_0
+
+learning_module_0:
+  _target_: tbp.monty.frameworks.models.evidence_matching.learning_module.EvidenceGraphLM
+  feature_weights:
+    patch:
+      hsv: ${np.array:[2, 0.5, 0.5]}
+      # THE ABLATION. Shipped value is ones(3). Zeroing it removes the entire
+      # orientation term, leaving the score equal to the appearance term alone.
+      pose_vectors: ${np.array:[0, 0, 0]}
+      principal_curvatures_log: ${np.ones:2}
+  tolerances:
+    patch:
+      hsv: ${np.array:[0.1, 0.2, 0.2]}
+      principal_curvatures_log: ${np.ones:2}
+  max_match_distance: 0.01
+  x_percent_threshold: 20
+  evidence_threshold_config: all
+  max_graph_size: 0.3
+  num_model_voxels_per_dim: 100
+  gsg:
+    _target_: tbp.monty.frameworks.models.goal_generation.EvidenceGoalGenerator
+    goal_tolerances:
+      location: 0.015
+    elapsed_steps_factor: 10
+    min_post_goal_success_steps: 5
+    x_percent_scale_factor: 0.75
+    desired_object_distance: 0.03

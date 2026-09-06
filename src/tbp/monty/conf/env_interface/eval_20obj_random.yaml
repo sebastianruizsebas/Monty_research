@@ -1,0 +1,43 @@
+# @package experiment.config
+#
+# 20-object evaluation set for the C1 A/B matrix.
+#
+# The first ten are the shipped `eval_distinctobj_random` benchmark set, so rows
+# stay comparable to published numbers. The second ten are drawn from
+# `eval_77obj_random` and chosen to be genuinely confusable rather than filler:
+# three spheres (golf_ball / orange / tennis_ball) and two boxes (sugar_box /
+# gelatin_box) that shape alone separates poorly, which is exactly where a change
+# to the non-pose feature score can show up.
+#
+# Every name here appears in `eval_77obj_random.yaml`, so the shipped 77-object
+# pretrained models already contain a graph for each. Memory therefore holds 77
+# candidates while evaluation visits 20; absolute accuracy will sit below the
+# published 10-object rows, but the distractor set is identical across arms so
+# the A/B comparison is unaffected.
+do_eval: true
+eval_env_interface_args:
+  parent_to_child_mapping: null
+  object_names:
+  - mug
+  - bowl
+  - potted_meat_can
+  - spoon
+  - strawberry
+  - mustard_bottle
+  - dice
+  - golf_ball
+  - c_lego_duplo
+  - banana
+  - master_chef_can
+  - tomato_soup_can
+  - power_drill
+  - hammer
+  - orange
+  - sugar_box
+  - gelatin_box
+  - plate
+  - tennis_ball
+  - scissors
+  object_init_sampler:
+    _target_: tbp.monty.frameworks.environments.object_init_samplers.RandomRotation
+eval_env_interface_class: ${monty.class:tbp.monty.experiment.environment.OneObjectPerEpisodeInterface}

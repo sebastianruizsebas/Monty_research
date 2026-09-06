@@ -1,0 +1,23 @@
+# @package experiment.config.monty_config.learning_modules
+#
+# C1 SCORING ARM, 1 LM -- the arm that can actually differ from stock.
+#
+# Inherits every parameter from the shipped `evidence_1lm_nn10_dod003` and
+# replaces one key: the feature evidence calculator. Unlike the telemetry arm,
+# this one CHANGES BEHAVIOUR -- it scores with a clamped log-likelihood sum
+# instead of the shipped tent-kernel weighted average, which suspends the
+# commitment that non-pose features may support a hypothesis but never eliminate
+# one (Leadholm, N., Clay, V., Knudstrup, S., Lee, H., & Hawkins, J. (2026),
+# "Thousand Brains systems", Neural Computation, 38(6), 845-896, p. 859).
+#
+# Predicted direction: WORSE than stock. At the SPAN = 12 needed to avoid
+# flattening 99.5% of nodes against the floor, the colour term outweighs the pose
+# term (which lives in -1 to 1) by roughly ten to one, inverting the priority the
+# commitment exists to protect. The size of the drop is the result.
+
+defaults:
+  - evidence_1lm_nn10_dod003
+
+learning_module_0:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.FlooredGaussianLogLikelihoodCalculator}

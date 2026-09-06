@@ -1,0 +1,27 @@
+# THE EXECUTED C1 ARM -- a wiretap, not a rewrite.
+#
+# Identical to the shipped `burst_sampling_10nn.yaml` in every respect except one
+# line: the feature evidence calculator. That calculator
+# (`TelemetryGaussianCalculator`) returns the shipped calculator's answer
+# bit-for-bit and merely records a probabilistic reading of the same numbers on
+# the side. Wiring it in therefore CANNOT change any decision Monty makes.
+#
+# That is the point. It means a run using this file must reproduce Monty's
+# published benchmark row exactly (99% correct, 39 matching steps on
+# `randrot_noise_10distinctobj_dist_agent`, per `benchmarks/ycb_10objs.csv`).
+# Any deviation means the wiring is broken, not that the experiment found
+# something.
+#
+# Why a probabilistic reading is wanted at all: Monty's own reference
+# publication -- Leadholm, N., Clay, V., Knudstrup, S., Lee, H., & Hawkins, J.
+# (2026), "Thousand Brains systems", Neural Computation, 38(6), 845-896 --
+# says a classification "and corresponding confidence can be extracted at any
+# time" (p. 861) but deliberately never defines that confidence, because "no
+# normalized distributions ... are represented in Monty" (p. 860). The recording
+# this file switches on supplies one, at zero behavioural risk.
+#
+# See `Private_Monty_journal/v4/c1_gaussian_likelihood_calculator.md`.
+hypotheses_updater_class: ${monty.class:tbp.monty.frameworks.models.evidence_matching.burst_sampling.BurstSamplingHypothesesUpdater}
+hypotheses_updater_args:
+  max_nneighbors: 10
+  feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.TelemetryGaussianCalculator}

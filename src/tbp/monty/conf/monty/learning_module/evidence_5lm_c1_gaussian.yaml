@@ -1,0 +1,27 @@
+# @package experiment.config.monty_config.learning_modules
+#
+# C1 SCORING ARM, 5 VOTING LMs.
+#
+# The multi-module counterpart of `evidence_1lm_c1_gaussian.yaml`. Worth running
+# alongside the 1-LM arm because voting renormalises evidence across modules
+# (Leadholm et al., 2026, Sec. 3.5), so a per-module scoring change need not
+# scale linearly with module count.
+
+defaults:
+  - evidence_5lm_nn10_dod003
+
+learning_module_0:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.FlooredGaussianLogLikelihoodCalculator}
+learning_module_1:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.FlooredGaussianLogLikelihoodCalculator}
+learning_module_2:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.FlooredGaussianLogLikelihoodCalculator}
+learning_module_3:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.FlooredGaussianLogLikelihoodCalculator}
+learning_module_4:
+  hypotheses_updater_args:
+    feature_evidence_calculator: ${monty.class:tbp.monty.frameworks.models.evidence_matching.feature_evidence.gaussian_likelihood_calculator.FlooredGaussianLogLikelihoodCalculator}
