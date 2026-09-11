@@ -36,6 +36,9 @@ from tbp.monty.experiment.recognition_policy import (
     RecognitionPolicy,
 )
 from tbp.monty.frameworks.actions.actions import Action
+from tbp.monty.frameworks.environments.positioning_procedures import (
+    ObjectNotVisibleError,
+)
 from tbp.monty.frameworks.experiments.hooks import NoOpStepHook, StepHook
 from tbp.monty.frameworks.experiments.mode import ExperimentMode
 from tbp.monty.frameworks.experiments.seed import episode_seed
@@ -94,6 +97,9 @@ class MontyExperiment:
         self.max_train_steps = config["max_train_steps"]
         self.n_eval_epochs = config["n_eval_epochs"]
         self.n_train_epochs = config["n_train_epochs"]
+        self.skip_on_object_not_visible = config.get(
+            "skip_on_object_not_visible", False
+        )
         if config["model_name_or_path"]:
             self.model_path = Path(config["model_name_or_path"])
         else:
@@ -459,10 +465,33 @@ class MontyExperiment:
             self.live_plotter.initialize_online_plotting()
 
     def run_episode(self):
-        """Runs an episode with `pre_episode` and `post_episode` hooks."""
-        self.pre_episode()
-        step = self.run_episode_steps()
-        self.post_episode(step)
+        """Run an episode, optionally skipping invisible training targets at setup.
+
+        Raises:
+            ObjectNotVisibleError: If positioning sees no target and skipping is
+                disabled, or the episode is an evaluation episode.
+        """
+        try:
+            self.pre_episode()
+        except ObjectNotVisibleError as error:
+            if (
+                not self.skip_on_object_not_visible
+                or self.experiment_mode is not ExperimentMode.TRAIN
+            ):
+                raise
+            target = self.env_interface.primary_target
+            logger.warning(
+                "Skipping training pose: object=%s position=%s rotation=%s reason=%s",
+                target["object"],
+                target["position"],
+                target["euler_rotation"],
+                error,
+            )
+            self.train_episodes += 1
+            self.env_interface.post_episode()
+            return
+        last_step = self.run_episode_steps()
+        self.post_episode(last_step)
 
     def run_episode_steps(self) -> int:
         """Runs the steps of an episode.
